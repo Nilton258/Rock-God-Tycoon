@@ -1,0 +1,8 @@
+﻿name: Default Festival
+min_fans: 10000
+begin_date: 05/01
+end_date: 05/11
+min_audience: 5000
+max_audience: 7500
+stage_image: Festivals\somefile.png
+grade: B+
