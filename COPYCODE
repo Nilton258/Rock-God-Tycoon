@@ -1,0 +1,1182 @@
+using UnityEngine;
+using Google.Cloud.Gaming.Services.Flow;
+using System.Collections.Generic;
+using System;
+using System.Text;
+using UnityEngine.UI;
+
+public class RockGodTycoonFlowIntegration : MonoBehaviour
+{
+    // FLOW SDK
+    private FlowClient flowClient;
+    private string playerId;
+
+    // Game Data
+    public int currentMoney;
+    public int currentFans;
+    public int currentLevel;
+    public int currentStudioLevel;
+    public int currentSongQuality;
+    public int currentTourCapacity;
+    public int currentTourCost;
+    public int currentSongCost;
+    public int currentStudioUpgradeCost;
+    public int currentTourUpgradeCost;
+    public int currentSongUpgradeCost;
+
+    // UI Elements
+    public Text moneyText;
+    public Text fansText;
+    public Text levelText;
+    public Text studioLevelText;
+    public Text songQualityText;
+    public Text tourCapacityText;
+    public Text tourCostText;
+    public Text songCostText;
+    public Text studioUpgradeCostText;
+    public Text tourUpgradeCostText;
+    public Text songUpgradeCostText;
+    public Button saveGameButton;
+    public Button loadGameButton;
+    public Button recordSongButton;
+    public Button goOnTourButton;
+    public Button upgradeStudioButton;
+    public Button upgradeTourButton;
+    public Button upgradeSongButton;
+
+    // Blockchain
+    private Blockchain blockchain;
+    private string playerAddress;
+
+    void Start()
+    {
+        // Initialize FLOW SDK
+        flowClient = new FlowClient();
+        flowClient.Initialize();
+
+        // Get player ID
+        playerId = flowClient.GetPlayerId();
+
+        // Generate player address
+        playerAddress = GeneratePlayerAddress();
+
+        // Initialize blockchain
+        blockchain = new Blockchain(4);
+
+        // Load player data
+        LoadPlayerData();
+
+        // Update UI
+        UpdateUI();
+
+        // Set button listeners
+        saveGameButton.onClick.AddListener(OnSaveGame);
+        loadGameButton.onClick.AddListener(OnLoadGame);
+        recordSongButton.onClick.AddListener(OnRecordSong);
+        goOnTourButton.onClick.AddListener(OnGoOnTour);
+        upgradeStudioButton.onClick.AddListener(OnUpgradeStudio);
+        upgradeTourButton.onClick.AddListener(OnUpgradeTour);
+        upgradeSongButton.onClick.AddListener(OnUpgradeSong);
+    }
+
+    // Save player data
+    private void SavePlayerData()
+    {
+        // Create JSON object
+        string jsonData = JsonUtility.ToJson(new PlayerData(
+            currentMoney, currentFans, currentLevel, currentStudioLevel,
+            currentSongQuality, currentTourCapacity, currentTourCost,
+            currentSongCost, currentStudioUpgradeCost, currentTourUpgradeCost,
+            currentSongUpgradeCost
+        ));
+
+        // Save to FLOW storage
+        flowClient.SavePlayerData(playerId, jsonData);
+
+        // Save to blockchain
+        SavePlayerDataToBlockchain();
+    }
+
+    // Load player data
+    private void LoadPlayerData()
+    {
+        // Load from FLOW storage
+        string jsonData = flowClient.LoadPlayerData(playerId);
+
+        // If data exists, load it
+        if (!string.IsNullOrEmpty(jsonData))
+        {
+            PlayerData playerData = JsonUtility.FromJson<PlayerData>(jsonData);
+            currentMoney = playerData.money;
+            currentFans = playerData.fans;
+            currentLevel = playerData.level;
+            currentStudioLevel = playerData.studioLevel;
+            currentSongQuality = playerData.songQuality;
+            currentTourCapacity = playerData.tourCapacity;
+            currentTourCost = playerData.tourCost;
+            currentSongCost = playerData.songCost;
+            currentStudioUpgradeCost = playerData.studioUpgradeCost;
+            currentTourUpgradeCost = playerData.tourUpgradeCost;
+            currentSongUpgradeCost = playerData.songUpgradeCost;
+        }
+
+        // Load from blockchain
+        LoadPlayerDataFromBlockchain();
+    }
+
+    // Generate player address
+    private string GeneratePlayerAddress()
+    {
+        SHA256 sha256 = SHA256.Create();
+        byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(playerId));
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    // Save player data to blockchain
+    private void SavePlayerDataToBlockchain()
+    {
+        // Implement USDC transfer logic here
+        // Use the FlowClient to interact with the USDC contract
+        // Update the blockchain with the transaction
+    }
+
+    // Load player data from blockchain
+    private void LoadPlayerDataFromBlockchain()
+    {
+        // Implement USDC balance retrieval logic here
+        // Use the FlowClient to interact with the USDC contract
+        // Update the game data with the retrieved balance
+    }
+
+    // Update UI
+    private void UpdateUI()
+    {
+        moneyText.text = "Money: " + currentMoney;
+        fansText.text = "Fans: " + currentFans;
+        levelText.text = "Level: " + currentLevel;
+        studioLevelText.text = "Studio Level: " + currentStudioLevel;
+        songQualityText.text = "Song Quality: " + currentSongQuality;
+        tourCapacityText.text = "Tour Capacity: " + currentTourCapacity;
+        tourCostText.text = "Tour Cost: " + currentTourCost;
+        songCostText.text = "Song Cost: " + currentSongCost;
+        studioUpgradeCostText.text = "Studio Upgrade Cost: " + currentStudioUpgradeCost;
+        tourUpgradeCostText.text = "Tour Upgrade Cost: " + currentTourUpgradeCost;
+        songUpgradeCostText.text = "Song Upgrade Cost: " + currentSongUpgradeCost;
+    }
+
+    // Button event handlers
+    public void OnSaveGame()
+    {
+        SavePlayerData();
+    }
+
+    public void OnLoadGame()
+    {
+        LoadPlayerData();
+        UpdateUI();
+    }
+
+    public void OnRecordSong()
+    {
+        if (currentMoney >= currentSongCost)
+        {
+            currentMoney -= currentSongCost;
+            currentSongQuality++;
+            currentSongCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnGoOnTour()
+    {
+        if (currentMoney >= currentTourCost)
+        {
+            currentMoney -= currentTourCost;
+            currentFans += currentTourCapacity;
+            currentLevel++;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeStudio()
+    {
+        if (currentMoney >= currentStudioUpgradeCost)
+        {
+            currentMoney -= currentStudioUpgradeCost;
+            currentStudioLevel++;
+            currentStudioUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeTour()
+    {
+        if (currentMoney >= currentTourUpgradeCost)
+        {
+            currentMoney -= currentTourUpgradeCost;
+            currentTourCapacity *= 2;
+            currentTourCost *= 2;
+            currentTourUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeSong()
+    {
+        if (currentMoney >= currentSongUpgradeCost)
+        {
+            currentMoney -= currentSongUpgradeCost;
+            currentSongQuality *= 2;
+            currentSongCost *= 2;
+            currentSongUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    // Player data class
+    [System.Serializable]
+    private class PlayerData
+    {
+        public int money;
+        public int fans;
+        public int level;
+        public int studioLevel;
+        public int songQuality;
+        public int tourCapacity;
+        public int tourCost;
+        public int songCost;
+        public int studioUpgradeCost;
+        public int tourUpgradeCost;
+        public int songUpgradeCost;
+
+        public PlayerData(int money, int fans, int level, int studioLevel, int songQuality, int tourCapacity, int tourCost, int songCost, int studioUpgradeCost, int tourUpgradeCost, int songUpgradeCost)
+        {
+            this.money = money;
+            this.fans = fans;
+            this.level = level;
+            this.studioLevel = studioLevel;
+            this.songQuality = songQuality;
+            this.tourCapacity = tourCapacity;
+            this.tourCost = tourCost;
+            this.songCost = songCost;
+            this.studioUpgradeCost = studioUpgradeCost;
+            this.tourUpgradeCost = tourUpgradeCost;
+            this.songUpgradeCost = songUpgradeCost;
+        }
+    }
+
+    // Blockchain classes (from previous example)
+    public class Blockchain
+    {
+        private List<Block> chain;
+        private int difficulty;
+
+        public Blockchain(int difficulty)
+        {
+            this.difficulty = difficulty;
+            chain = new List<Block>();
+            chain.Add(CreateGenesisBlock());
+        }
+
+        public List<Block> GetChain()
+        {
+            return chain;
+        }
+
+        public void AddBlock(Block newBlock)
+        {
+            newBlock.PreviousHash = chain[chain.Count - 1].Hash;
+            newBlock.Hash = CalculateHash(newBlock);
+
+            if (IsValidBlock(newBlock))
+            {
+                chain.Add(newBlock);
+            }
+            else
+            {
+                Debug.LogError("Invalid block. Block not added to the chain.");
+            }
+        }
+
+        private Block CreateGenesisBlock()
+        {
+            return new Block(0, DateTime.Now.ToString(), "0", new List<Transaction>());
+        }
+
+        private string CalculateHash(Block block)
+        {
+            string input = block.Index.ToString() + block.Timestamp + block.PreviousHash + string.Join("", block.Transactions);
+            SHA256 sha256 = SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return Convert.ToBase64String(hashBytes);
+        }
+
+        private bool IsValidBlock(Block newBlock)
+        {
+            if (newBlock.Index != chain[chain.Count - 1].Index + 1)
+            {
+                return false;
+            }
+
+            if (newBlock.PreviousHash != chain[chain.Count - 1].Hash)
+            {
+                return false;
+            }
+
+            if (!newBlock.Hash.StartsWith(new string('0', difficulty)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class Block
+    {
+        public int Index { get; set; }
+        public string Timestamp { get; set; }
+        public string PreviousHash { get; set; }
+        public string Hash { get; set; }
+        public List<Transaction> Transactions { get; set; }
+
+        public Block(int index, string timestamp, string previousHash, List<Transaction> transactions)
+        {
+            Index = index;
+            Timestamp = timestamp;
+            PreviousHash = previousHash;
+            Transactions = transactions;
+            Hash = CalculateHash();
+        }
+
+        private string CalculateHash()
+        {
+            string input = Index.ToString() + Timestamp + PreviousHash + string.Join("", Transactions);
+            SHA256 sha256 = SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return Convert.ToBase64String(hashBytes);
+        }
+    }
+
+    public class Transaction
+    {
+        public string Sender { get; set; }
+        public string Receiver { get; set; }
+        public int Amount { get; set; }
+
+        public Transaction(string sender, string receiver, int amount)
+        {
+            Sender = sender;
+            Receiver = receiver;
+            Amount = amount;
+        }
+    }
+}
+using UnityEngine;
+using Google.Cloud.Gaming.Services.Flow;
+using System.Collections.Generic;
+using System;
+using System.Text;
+using UnityEngine.UI;
+
+public class RockGodTycoonFlowIntegration : MonoBehaviour
+{
+    // FLOW SDK
+    private FlowClient flowClient;
+    private string playerId;
+
+    // Game Data
+    public int currentMoney;
+    public int currentFans;
+    public int currentLevel;
+    public int currentStudioLevel;
+    public int currentSongQuality;
+    public int currentTourCapacity;
+    public int currentTourCost;
+    public int currentSongCost;
+    public int currentStudioUpgradeCost;
+    public int currentTourUpgradeCost;
+    public int currentSongUpgradeCost;
+
+    // UI Elements
+    public Text moneyText;
+    public Text fansText;
+    public Text levelText;
+    public Text studioLevelText;
+    public Text songQualityText;
+    public Text tourCapacityText;
+    public Text tourCostText;
+    public Text songCostText;
+    public Text studioUpgradeCostText;
+    public Text tourUpgradeCostText;
+    public Text songUpgradeCostText;
+    public Button saveGameButton;
+    public Button loadGameButton;
+    public Button recordSongButton;
+    public Button goOnTourButton;
+    public Button upgradeStudioButton;
+    public Button upgradeTourButton;
+    public Button upgradeSongButton;
+
+    // Blockchain
+    private Blockchain blockchain;
+    private string playerAddress;
+
+    void Start()
+    {
+        // Initialize FLOW SDK
+        flowClient = new FlowClient();
+        flowClient.Initialize();
+
+        // Get player ID
+        playerId = flowClient.GetPlayerId();
+
+        // Generate player address
+        playerAddress = GeneratePlayerAddress();
+
+        // Initialize blockchain
+        blockchain = new Blockchain(4);
+
+        // Load player data
+        LoadPlayerData();
+
+        // Update UI
+        UpdateUI();
+
+        // Set button listeners
+        saveGameButton.onClick.AddListener(OnSaveGame);
+        loadGameButton.onClick.AddListener(OnLoadGame);
+        recordSongButton.onClick.AddListener(OnRecordSong);
+        goOnTourButton.onClick.AddListener(OnGoOnTour);
+        upgradeStudioButton.onClick.AddListener(OnUpgradeStudio);
+        upgradeTourButton.onClick.AddListener(OnUpgradeTour);
+        upgradeSongButton.onClick.AddListener(OnUpgradeSong);
+    }
+
+    // Save player data
+    private void SavePlayerData()
+    {
+        // Create JSON object
+        string jsonData = JsonUtility.ToJson(new PlayerData(
+            currentMoney, currentFans, currentLevel, currentStudioLevel,
+            currentSongQuality, currentTourCapacity, currentTourCost,
+            currentSongCost, currentStudioUpgradeCost, currentTourUpgradeCost,
+            currentSongUpgradeCost
+        ));
+
+        // Save to FLOW storage
+        flowClient.SavePlayerData(playerId, jsonData);
+
+        // Save to blockchain
+        SavePlayerDataToBlockchain();
+    }
+
+    // Load player data
+    private void LoadPlayerData()
+    {
+        // Load from FLOW storage
+        string jsonData = flowClient.LoadPlayerData(playerId);
+
+        // If data exists, load it
+        if (!string.IsNullOrEmpty(jsonData))
+        {
+            PlayerData playerData = JsonUtility.FromJson<PlayerData>(jsonData);
+            currentMoney = playerData.money;
+            currentFans = playerData.fans;
+            currentLevel = playerData.level;
+            currentStudioLevel = playerData.studioLevel;
+            currentSongQuality = playerData.songQuality;
+            currentTourCapacity = playerData.tourCapacity;
+            currentTourCost = playerData.tourCost;
+            currentSongCost = playerData.songCost;
+            currentStudioUpgradeCost = playerData.studioUpgradeCost;
+            currentTourUpgradeCost = playerData.tourUpgradeCost;
+            currentSongUpgradeCost = playerData.songUpgradeCost;
+        }
+
+        // Load from blockchain
+        LoadPlayerDataFromBlockchain();
+    }
+
+    // Generate player address
+    private string GeneratePlayerAddress()
+    {
+        SHA256 sha256 = SHA256.Create();
+        byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(playerId));
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    // Save player data to blockchain
+    private void SavePlayerDataToBlockchain()
+    {
+        // Implement USDC transfer logic here
+        // Use the FlowClient to interact with the USDC contract
+        // Update the blockchain with the transaction
+    }
+
+    // Load player data from blockchain
+    private void LoadPlayerDataFromBlockchain()
+    {
+        // Implement USDC balance retrieval logic here
+        // Use the FlowClient to interact with the USDC contract
+        // Update the game data with the retrieved balance
+    }
+
+    // Update UI
+    private void UpdateUI()
+    {
+        moneyText.text = "Money: " + currentMoney;
+        fansText.text = "Fans: " + currentFans;
+        levelText.text = "Level: " + currentLevel;
+        studioLevelText.text = "Studio Level: " + currentStudioLevel;
+        songQualityText.text = "Song Quality: " + currentSongQuality;
+        tourCapacityText.text = "Tour Capacity: " + currentTourCapacity;
+        tourCostText.text = "Tour Cost: " + currentTourCost;
+        songCostText.text = "Song Cost: " + currentSongCost;
+        studioUpgradeCostText.text = "Studio Upgrade Cost: " + currentStudioUpgradeCost;
+        tourUpgradeCostText.text = "Tour Upgrade Cost: " + currentTourUpgradeCost;
+        songUpgradeCostText.text = "Song Upgrade Cost: " + currentSongUpgradeCost;
+    }
+
+    // Button event handlers
+    public void OnSaveGame()
+    {
+        SavePlayerData();
+    }
+
+    public void OnLoadGame()
+    {
+        LoadPlayerData();
+        UpdateUI();
+    }
+
+    public void OnRecordSong()
+    {
+        if (currentMoney >= currentSongCost)
+        {
+            currentMoney -= currentSongCost;
+            currentSongQuality++;
+            currentSongCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnGoOnTour()
+    {
+        if (currentMoney >= currentTourCost)
+        {
+            currentMoney -= currentTourCost;
+            currentFans += currentTourCapacity;
+            currentLevel++;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeStudio()
+    {
+        if (currentMoney >= currentStudioUpgradeCost)
+        {
+            currentMoney -= currentStudioUpgradeCost;
+            currentStudioLevel++;
+            currentStudioUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeTour()
+    {
+        if (currentMoney >= currentTourUpgradeCost)
+        {
+            currentMoney -= currentTourUpgradeCost;
+            currentTourCapacity *= 2;
+            currentTourCost *= 2;
+            currentTourUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeSong()
+    {
+        if (currentMoney >= currentSongUpgradeCost)
+        {
+            currentMoney -= currentSongUpgradeCost;
+            currentSongQuality *= 2;
+            currentSongCost *= 2;
+            currentSongUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    // Player data class
+    [System.Serializable]
+    private class PlayerData
+    {
+        public int money;
+        public int fans;
+        public int level;
+        public int studioLevel;
+        public int songQuality;
+        public int tourCapacity;
+        public int tourCost;
+        public int songCost;
+        public int studioUpgradeCost;
+        public int tourUpgradeCost;
+        public int songUpgradeCost;
+
+        public PlayerData(int money, int fans, int level, int studioLevel, int songQuality, int tourCapacity, int tourCost, int songCost, int studioUpgradeCost, int tourUpgradeCost, int songUpgradeCost)
+        {
+            this.money = money;
+            this.fans = fans;
+            this.level = level;
+            this.studioLevel = studioLevel;
+            this.songQuality = songQuality;
+            this.tourCapacity = tourCapacity;
+            this.tourCost = tourCost;
+            this.songCost = songCost;
+            this.studioUpgradeCost = studioUpgradeCost;
+            this.tourUpgradeCost = tourUpgradeCost;
+            this.songUpgradeCost = songUpgradeCost;
+        }
+    }
+
+    // Blockchain classes (from previous example)
+    public class Blockchain
+    {
+        private List<Block> chain;
+        private int difficulty;
+
+        public Blockchain(int difficulty)
+        {
+            this.difficulty = difficulty;
+            chain = new List<Block>();
+            chain.Add(CreateGenesisBlock());
+        }
+
+        public List<Block> GetChain()
+        {
+            return chain;
+        }
+
+        public void AddBlock(Block newBlock)
+        {
+            newBlock.PreviousHash = chain[chain.Count - 1].Hash;
+            newBlock.Hash = CalculateHash(newBlock);
+
+            if (IsValidBlock(newBlock))
+            {
+                chain.Add(newBlock);
+            }
+            else
+            {
+                Debug.LogError("Invalid block. Block not added to the chain.");
+            }
+        }
+
+        private Block CreateGenesisBlock()
+        {
+            return new Block(0, DateTime.Now.ToString(), "0", new List<Transaction>());
+        }
+
+        private string CalculateHash(Block block)
+        {
+            string input = block.Index.ToString() + block.Timestamp + block.PreviousHash + string.Join("", block.Transactions);
+            SHA256 sha256 = SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return Convert.ToBase64String(hashBytes);
+        }
+
+        private bool IsValidBlock(Block newBlock)
+        {
+            if (newBlock.Index != chain[chain.Count - 1].Index + 1)
+            {
+                return false;
+            }
+
+            if (newBlock.PreviousHash != chain[chain.Count - 1].Hash)
+            {
+                return false;
+            }
+
+            if (!newBlock.Hash.StartsWith(new string('0', difficulty)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class Block
+    {
+        public int Index { get; set; }
+        public string Timestamp { get; set; }
+        public string PreviousHash { get; set; }
+        public string Hash { get; set; }
+        public List<Transaction> Transactions { get; set; }
+
+        public Block(int index, string timestamp, string previousHash, List<Transaction> transactions)
+        {
+            Index = index;
+            Timestamp = timestamp;
+            PreviousHash = previousHash;
+            Transactions = transactions;
+            Hash = CalculateHash();
+        }
+
+        private string CalculateHash()
+        {
+            string input = Index.ToString() + Timestamp + PreviousHash + string.Join("", Transactions);
+            SHA256 sha256 = SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return Convert.ToBase64String(hashBytes);
+        }
+    }
+
+    public class Transaction
+    {
+        public string Sender { get; set; }
+        public string Receiver { get; set; }
+        public int Amount { get; set; }
+
+        public Transaction(string sender, string receiver, int amount)
+        {
+            Sender = sender;
+            Receiver = receiver;
+            Amount = amount;
+        }
+    }
+}
+using UnityEngine;
+using Google.Cloud.Gaming.Services.Flow;
+using System.Collections.Generic;
+using System;
+using System.Text;
+using UnityEngine.UI;
+
+public class RockGodTycoonFlowIntegration : MonoBehaviour
+{
+    // FLOW SDK
+    private FlowClient flowClient;
+    private string playerId;
+
+    // Game Data
+    public int currentMoney;
+    public int currentFans;
+    public int currentLevel;
+    public int currentStudioLevel;
+    public int currentSongQuality;
+    public int currentTourCapacity;
+    public int currentTourCost;
+    public int currentSongCost;
+    public int currentStudioUpgradeCost;
+    public int currentTourUpgradeCost;
+    public int currentSongUpgradeCost;
+
+    // UI Elements
+    public Text moneyText;
+    public Text fansText;
+    public Text levelText;
+    public Text studioLevelText;
+    public Text songQualityText;
+    public Text tourCapacityText;
+    public Text tourCostText;
+    public Text songCostText;
+    public Text studioUpgradeCostText;
+    public Text tourUpgradeCostText;
+    public Text songUpgradeCostText;
+    public Button saveGameButton;
+    public Button loadGameButton;
+    public Button recordSongButton;
+    public Button goOnTourButton;
+    public Button upgradeStudioButton;
+    public Button upgradeTourButton;
+    public Button upgradeSongButton;
+
+    // Blockchain
+    private Blockchain blockchain;
+    private string playerAddress;
+
+    void Start()
+    {
+        // Initialize FLOW SDK
+        flowClient = new FlowClient();
+        flowClient.Initialize();
+
+        // Get player ID
+        playerId = flowClient.GetPlayerId();
+
+        // Generate player address
+        playerAddress = GeneratePlayerAddress();
+
+        // Initialize blockchain
+        blockchain = new Blockchain(4);
+
+        // Load player data
+        LoadPlayerData();
+
+        // Update UI
+        UpdateUI();
+
+        // Set button listeners
+        saveGameButton.onClick.AddListener(OnSaveGame);
+        loadGameButton.onClick.AddListener(OnLoadGame);
+        recordSongButton.onClick.AddListener(OnRecordSong);
+        goOnTourButton.onClick.AddListener(OnGoOnTour);
+        upgradeStudioButton.onClick.AddListener(OnUpgradeStudio);
+        upgradeTourButton.onClick.AddListener(OnUpgradeTour);
+        upgradeSongButton.onClick.AddListener(OnUpgradeSong);
+    }
+
+    // Save player data
+    private void SavePlayerData()
+    {
+        // Create JSON object
+        string jsonData = JsonUtility.ToJson(new PlayerData(
+            currentMoney, currentFans, currentLevel, currentStudioLevel,
+            currentSongQuality, currentTourCapacity, currentTourCost,
+            currentSongCost, currentStudioUpgradeCost, currentTourUpgradeCost,
+            currentSongUpgradeCost
+        ));
+
+        // Save to FLOW storage
+        flowClient.SavePlayerData(playerId, jsonData);
+
+        // Save to blockchain
+        SavePlayerDataToBlockchain();
+    }
+
+    // Load player data
+    private void LoadPlayerData()
+    {
+        // Load from FLOW storage
+        string jsonData = flowClient.LoadPlayerData(playerId);
+
+        // If data exists, load it
+        if (!string.IsNullOrEmpty(jsonData))
+        {
+            PlayerData playerData = JsonUtility.FromJson<PlayerData>(jsonData);
+            currentMoney = playerData.money;
+            currentFans = playerData.fans;
+            currentLevel = playerData.level;
+            currentStudioLevel = playerData.studioLevel;
+            currentSongQuality = playerData.songQuality;
+            currentTourCapacity = playerData.tourCapacity;
+            currentTourCost = playerData.tourCost;
+            currentSongCost = playerData.songCost;
+            currentStudioUpgradeCost = playerData.studioUpgradeCost;
+            currentTourUpgradeCost = playerData.tourUpgradeCost;
+            currentSongUpgradeCost = playerData.songUpgradeCost;
+        }
+
+        // Load from blockchain
+        LoadPlayerDataFromBlockchain();
+    }
+
+    // Generate player address
+    private string GeneratePlayerAddress()
+    {
+        SHA256 sha256 = SHA256.Create();
+        byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(playerId));
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    // Save player data to blockchain
+    private void SavePlayerDataToBlockchain()
+    {
+        // Implement USDC transfer logic here
+        // Use the FlowClient to interact with the USDC contract
+        // Update the blockchain with the transaction
+    }
+
+    // Load player data from blockchain
+    private void LoadPlayerDataFromBlockchain()
+    {
+        // Implement USDC balance retrieval logic here
+        // Use the FlowClient to interact with the USDC contract
+        // Update the game data with the retrieved balance
+    }
+
+    // Update UI
+    private void UpdateUI()
+    {
+        moneyText.text = "Money: " + currentMoney;
+        fansText.text = "Fans: " + currentFans;
+        levelText.text = "Level: " + currentLevel;
+        studioLevelText.text = "Studio Level: " + currentStudioLevel;
+        songQualityText.text = "Song Quality: " + currentSongQuality;
+        tourCapacityText.text = "Tour Capacity: " + currentTourCapacity;
+        tourCostText.text = "Tour Cost: " + currentTourCost;
+        songCostText.text = "Song Cost: " + currentSongCost;
+        studioUpgradeCostText.text = "Studio Upgrade Cost: " + currentStudioUpgradeCost;
+        tourUpgradeCostText.text = "Tour Upgrade Cost: " + currentTourUpgradeCost;
+        songUpgradeCostText.text = "Song Upgrade Cost: " + currentSongUpgradeCost;
+    }
+
+    // Button event handlers
+    public void OnSaveGame()
+    {
+        SavePlayerData();
+    }
+
+    public void OnLoadGame()
+    {
+        LoadPlayerData();
+        UpdateUI();
+    }
+
+    public void OnRecordSong()
+    {
+        if (currentMoney >= currentSongCost)
+        {
+            currentMoney -= currentSongCost;
+            currentSongQuality++;
+            currentSongCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnGoOnTour()
+    {
+        if (currentMoney >= currentTourCost)
+        {
+            currentMoney -= currentTourCost;
+            currentFans += currentTourCapacity;
+            currentLevel++;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeStudio()
+    {
+        if (currentMoney >= currentStudioUpgradeCost)
+        {
+            currentMoney -= currentStudioUpgradeCost;
+            currentStudioLevel++;
+            currentStudioUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeTour()
+    {
+        if (currentMoney >= currentTourUpgradeCost)
+        {
+            currentMoney -= currentTourUpgradeCost;
+            currentTourCapacity *= 2;
+            currentTourCost *= 2;
+            currentTourUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    public void OnUpgradeSong()
+    {
+        if (currentMoney >= currentSongUpgradeCost)
+        {
+            currentMoney -= currentSongUpgradeCost;
+            currentSongQuality *= 2;
+            currentSongCost *= 2;
+            currentSongUpgradeCost *= 2;
+            UpdateUI();
+        }
+        else
+        {
+            // Show error message (not implemented)
+        }
+    }
+
+    // Player data class
+    [System.Serializable]
+    private class PlayerData
+    {
+        public int money;
+        public int fans;
+        public int level;
+        public int studioLevel;
+        public int songQuality;
+        public int tourCapacity;
+        public int tourCost;
+        public int songCost;
+        public int studioUpgradeCost;
+        public int tourUpgradeCost;
+        public int songUpgradeCost;
+
+        public PlayerData(int money, int fans, int level, int studioLevel, int songQuality, int tourCapacity, int tourCost, int songCost, int studioUpgradeCost, int tourUpgradeCost, int songUpgradeCost)
+        {
+            this.money = money;
+            this.fans = fans;
+            this.level = level;
+            this.studioLevel = studioLevel;
+            this.songQuality = songQuality;
+            this.tourCapacity = tourCapacity;
+            this.tourCost = tourCost;
+            this.songCost = songCost;
+            this.studioUpgradeCost = studioUpgradeCost;
+            this.tourUpgradeCost = tourUpgradeCost;
+            this.songUpgradeCost = songUpgradeCost;
+        }
+    }
+
+    // Blockchain classes (from previous example)
+    public class Blockchain
+    {
+        private List<Block> chain;
+        private int difficulty;
+
+        public Blockchain(int difficulty)
+        {
+            this.difficulty = difficulty;
+            chain = new List<Block>();
+            chain.Add(CreateGenesisBlock());
+        }
+
+        public List<Block> GetChain()
+        {
+            return chain;
+        }
+
+        public void AddBlock(Block newBlock)
+        {
+            newBlock.PreviousHash = chain[chain.Count - 1].Hash;
+            newBlock.Hash = CalculateHash(newBlock);
+
+            if (IsValidBlock(newBlock))
+            {
+                chain.Add(newBlock);
+            }
+            else
+            {
+                Debug.LogError("Invalid block. Block not added to the chain.");
+            }
+        }
+
+        private Block CreateGenesisBlock()
+        {
+            return new Block(0, DateTime.Now.ToString(), "0", new List<Transaction>());
+        }
+
+        private string CalculateHash(Block block)
+        {
+            string input = block.Index.ToString() + block.Timestamp + block.PreviousHash + string.Join("", block.Transactions);
+            SHA256 sha256 = SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return Convert.ToBase64String(hashBytes);
+        }
+
+        private bool IsValidBlock(Block newBlock)
+        {
+            if (newBlock.Index != chain[chain.Count - 1].Index + 1)
+            {
+                return false;
+            }
+
+            if (newBlock.PreviousHash != chain[chain.Count - 1].Hash)
+            {
+                return false;
+            }
+
+            if (!newBlock.Hash.StartsWith(new string('0', difficulty)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class Block
+    {
+        public int Index { get; set; }
+        public string Timestamp { get; set; }
+        public string PreviousHash { get; set; }
+        public string Hash { get; set; }
+        public List<Transaction> Transactions { get; set; }
+
+        public Block(int index, string timestamp, string previousHash, List<Transaction> transactions)
+        {
+            Index = index;
+            Timestamp = timestamp;
+            PreviousHash = previousHash;
+            Transactions = transactions;
+            Hash = CalculateHash();
+        }
+
+        private string CalculateHash()
+        {
+            string input = Index.ToString() + Timestamp + PreviousHash + string.Join("", Transactions);
+            SHA256 sha256 = SHA256.Create();
+            byte[] hashBytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return Convert.ToBase64String(hashBytes);
+        }
+    }
+
+    public class Transaction
+    {
+        public string Sender { get; set; }
+        public string Receiver { get; set; }
+        public int Amount { get; set; }
+
+        public Transaction(string sender, string receiver, int amount)
+        {
+            Sender = sender;
+            Receiver = receiver;
+            Amount = amount;
+        }
+    }
+}

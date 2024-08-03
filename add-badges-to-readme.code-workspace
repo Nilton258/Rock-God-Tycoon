@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../RockGodTycoon.worktrees/add-badges-to-readme"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../RockGodTycoon.worktrees"
+		}
+	],
+	"settings": {}
+}
